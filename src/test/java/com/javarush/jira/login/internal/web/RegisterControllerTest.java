@@ -3,7 +3,10 @@ package com.javarush.jira.login.internal.web;
 import com.javarush.jira.AbstractControllerTest;
 import com.javarush.jira.login.UserTo;
 import com.javarush.jira.login.internal.verification.ConfirmData;
+import com.javarush.jira.mail.MailService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.security.test.context.support.WithUserDetails;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
@@ -14,10 +17,22 @@ import static com.javarush.jira.login.internal.web.UserTestData.TO_MATCHER;
 import static com.javarush.jira.login.internal.web.UserTestData.USER_MAIL;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.ArgumentMatchers.anyMap;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 class RegisterControllerTest extends AbstractControllerTest {
+
+    @MockBean
+    private MailService mailService; // Создаем заглушку MailService
+
+    @BeforeEach
+    public void setup() {
+        // Заглушка метода send(), всегда возвращает успех
+        when(mailService.send(anyString(), anyString(), anyString(), anyMap())).thenReturn("OK");
+    }
 
     @Test
     void showRegisterPage() throws Exception {
