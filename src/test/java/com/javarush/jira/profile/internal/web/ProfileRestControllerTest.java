@@ -31,7 +31,7 @@ class ProfileRestControllerTest extends AbstractControllerTest {
 
     @Test
     @WithUserDetails(value = USER_MAIL)
-    void get_success_test() throws Exception {
+    void getProfileSuccess() throws Exception {
 
         MvcResult result = perform(MockMvcRequestBuilders.get(REST_URL))
                 .andExpect(status().isOk())
@@ -46,7 +46,7 @@ class ProfileRestControllerTest extends AbstractControllerTest {
     }
 
     @Test
-    void get_non_authorized_test() throws Exception {
+    void getProfileNonAuthorized() throws Exception {
 
         perform(MockMvcRequestBuilders.get(REST_URL))
                 .andExpect(status().isUnauthorized())
@@ -56,7 +56,7 @@ class ProfileRestControllerTest extends AbstractControllerTest {
 
     @Test
     @WithUserDetails(value = USER_MAIL)
-    void update_profile_authorized_test() throws Exception {
+    void updateProfileAuthorized() throws Exception {
 
         perform(MockMvcRequestBuilders.put(REST_URL)
                 .contentType(MediaType.APPLICATION_JSON)
@@ -67,7 +67,7 @@ class ProfileRestControllerTest extends AbstractControllerTest {
 
     @Test
     @WithUserDetails(value = USER_MAIL)
-    void update_success_test() throws Exception {
+    void updateProfileSuccess() throws Exception {
         ProfileTo updatedTo = ProfileTestData.getUpdatedTo();
         perform(MockMvcRequestBuilders.put(REST_URL)
                 .contentType(MediaType.APPLICATION_JSON)
@@ -83,7 +83,7 @@ class ProfileRestControllerTest extends AbstractControllerTest {
 
     @Test
     @WithUserDetails(value = USER_MAIL)
-    void update_profile_invalid_test() throws Exception {
+    void updateProfileInvalid() throws Exception {
 
         perform(MockMvcRequestBuilders.put(REST_URL)
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
@@ -95,7 +95,7 @@ class ProfileRestControllerTest extends AbstractControllerTest {
 
     @Test
     @WithUserDetails(value = USER_MAIL)
-    void update_profile_unknown_contact_test() throws Exception {
+    void updateProfileUnknownContact() throws Exception {
 
         perform(MockMvcRequestBuilders.put(REST_URL)
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
