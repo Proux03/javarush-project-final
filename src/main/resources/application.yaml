@@ -9,7 +9,7 @@ app:
 
 spring:
   profiles:
-    active: @spring.profiles.active@
+    active: "@spring.profiles.active@"
   init:
     mode: never
   jpa:

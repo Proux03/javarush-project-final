@@ -6,5 +6,6 @@ import org.springframework.test.context.ActiveProfiles;
 
 @SpringBootTest
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
+@ActiveProfiles("h2")
 abstract class BaseTests {
 }
