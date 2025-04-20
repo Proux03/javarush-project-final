@@ -156,4 +156,11 @@ public class TaskController {
             this(taskTo, new LinkedList<>());
         }
     }
+
+    @PatchMapping("/{id}/tags")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void addTags(@PathVariable long id, @RequestBody List<String> tags) {
+        log.info("add tags for task with id={}", id);
+        taskService.addTaskTags(id, tags);
+    }
 }

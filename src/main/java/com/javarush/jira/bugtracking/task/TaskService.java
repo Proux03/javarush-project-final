@@ -20,7 +20,10 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import static com.javarush.jira.bugtracking.ObjectType.TASK;
 import static com.javarush.jira.bugtracking.task.TaskUtil.fillExtraFields;
@@ -139,5 +142,16 @@ public class TaskService {
         if (!userType.equals(possibleUserType)) {
             throw new DataConflictException(String.format(assign ? CANNOT_ASSIGN : CANNOT_UN_ASSIGN, userType, task.getStatusCode()));
         }
+    }
+
+    @Transactional
+    public void addTaskTags(long taskId, List<String> newTags) {
+        Task task = handler.getRepository().getExisted(taskId);
+        Set<String> updatedTags = new HashSet<>(task.getTags());
+        updatedTags.addAll(newTags.stream()
+                .filter(tag -> tag.length() >= 2 && tag.length() <= 32).toList());
+        task.setTags(updatedTags);
+
+        handler.getRepository().save(task);
     }
 }
