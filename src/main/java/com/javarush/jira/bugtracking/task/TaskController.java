@@ -160,7 +160,15 @@ public class TaskController {
     @PatchMapping("/{id}/tags")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void addTags(@PathVariable long id, @RequestBody List<String> tags) {
-        log.info("add tags for task with id={}", id);
+        log.info("add tags {} for task with id={}", tags, id);
         taskService.addTaskTags(id, tags);
     }
+
+    @DeleteMapping("/{id}/tags")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void removeTags(@PathVariable long id, @RequestBody List<String> tags) {
+        log.info("remove tags {} for task with id={}", tags, id);
+        taskService.removeTaskTags(id, tags);
+    }
+
 }
