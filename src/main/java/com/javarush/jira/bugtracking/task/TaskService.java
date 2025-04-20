@@ -10,6 +10,7 @@ import com.javarush.jira.bugtracking.task.mapper.TaskFullMapper;
 import com.javarush.jira.bugtracking.task.to.TaskToExt;
 import com.javarush.jira.bugtracking.task.to.TaskToFull;
 import com.javarush.jira.common.error.DataConflictException;
+import com.javarush.jira.common.error.IllegalRequestDataException;
 import com.javarush.jira.common.error.NotFoundException;
 import com.javarush.jira.common.util.Util;
 import com.javarush.jira.login.AuthUser;
@@ -139,5 +140,27 @@ public class TaskService {
         if (!userType.equals(possibleUserType)) {
             throw new DataConflictException(String.format(assign ? CANNOT_ASSIGN : CANNOT_UN_ASSIGN, userType, task.getStatusCode()));
         }
+    }
+
+    @Transactional
+    public void addTaskTags(long taskId, List<String> newTags) {
+        Task task = handler.getRepository().getExisted(taskId);
+
+        List<String> invalidTags = newTags.stream()
+                .filter(tag -> !(tag.length() >= 2 && tag.length() <= 32)).toList();
+
+        if (!invalidTags.isEmpty()) {
+            throw new IllegalRequestDataException("Следующие теги имеют недопустимое количество символов: " + invalidTags);
+        }
+
+        task.getTags().addAll(newTags);
+        handler.getRepository().save(task);
+    }
+
+    @Transactional
+    public void removeTaskTags(long taskId, List<String> tagsToRemove) {
+        Task task = handler.getRepository().getExisted(taskId);
+        task.getTags().removeIf(tagsToRemove::contains);
+        handler.getRepository().save(task);
     }
 }
