@@ -21,7 +21,10 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
+import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static com.javarush.jira.bugtracking.ObjectType.TASK;
 import static com.javarush.jira.bugtracking.task.TaskUtil.fillExtraFields;
@@ -33,6 +36,9 @@ import static com.javarush.jira.ref.ReferenceService.getRefTo;
 public class TaskService {
     static final String CANNOT_ASSIGN = "Cannot assign as %s to task with status=%s";
     static final String CANNOT_UN_ASSIGN = "Cannot unassign as %s from task with status=%s";
+    static final String IN_PROGRESS_STATUS = "in_progress";
+    static final String READY_FOR_REVIEW_STATUS = "ready_for_review";
+    static final String DONE_STATUS = "done";
 
     private final Handlers.TaskExtHandler handler;
     private final Handlers.ActivityHandler activityHandler;
@@ -162,5 +168,34 @@ public class TaskService {
         Task task = handler.getRepository().getExisted(taskId);
         task.getTags().removeIf(tagsToRemove::contains);
         handler.getRepository().save(task);
+    }
+
+    public Long workingTime(Task task) {
+        return checkTimeBetweenStatuses(task.getId(), IN_PROGRESS_STATUS, READY_FOR_REVIEW_STATUS);
+    }
+
+    public Long testingTime(Task task) {
+        return checkTimeBetweenStatuses(task.getId(), READY_FOR_REVIEW_STATUS, DONE_STATUS);
+    }
+
+    private Long checkTimeBetweenStatuses(Long taskId, String startStatus, String endStatus) {
+        List<Activity> activities = activityHandler.getRepository().findAllByTaskIdOrderByUpdatedDesc(taskId)
+                .stream()
+                .filter(act -> startStatus.equals(act.getStatusCode())
+                        || endStatus.equals(act.getStatusCode()))
+                .collect(Collectors.toMap(Activity::getStatusCode, act -> act, (existing, replacement) -> existing))
+                .values()
+                .stream()
+                .sorted(Comparator.comparing(Activity::getUpdated))
+                .toList();
+
+        if (activities.size() <= 1) {
+            throw new IllegalStateException("Недостаточно данных для расчёта временного интервала");
+        }
+
+        LocalDateTime endTime = activities.get(0).getUpdated().truncatedTo(ChronoUnit.MINUTES);
+        LocalDateTime startTime = activities.get(1).getUpdated().truncatedTo(ChronoUnit.MINUTES);
+
+        return ChronoUnit.MINUTES.between(endTime, startTime);
     }
 }
