@@ -50,3 +50,10 @@
    Сколько задача находилась на тестировании (done минус ready_for_review).
    Для написания этого задания, нужно добавить в конец скрипта инициализации базы данных changelog.sql 3 записи в таблицу ACTIVITY
    (insert into ACTIVITY ( ID, AUTHOR_ID, TASK_ID, UPDATED, STATUS_CODE ) values ...)
+9. Написать Dockerfile для основного сервера.
+    Команды для запуска проекта в Docker контейнере:
+    docker network create my-network (создаем новую общую сеть для контейнеров)
+    docker network connect my-network postgres-db (привязываем наш контейнер с БД к новой сети)
+    docker build -t jira-rush-image . (собираем образ)
+    docker run --network my-network -p 8080:8080 --env-file=.env --name jira-rush jira-rush-image
+    (запускаем контейнер в той же сети где запущена БД и подтягиваем файл с переменными окружения)
