@@ -190,6 +190,9 @@
             <properties>
                 <spring.profiles.active>prod</spring.profiles.active>
             </properties>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
             <build>
                 <plugins>
                     <plugin>
