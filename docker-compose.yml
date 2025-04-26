@@ -35,17 +35,14 @@ services:
     depends_on:
       - db
       - test_db
-    ports:
-      - "8080:8080"
     env_file:
       - .env
 
   nginx:
-    image: nginx:alpine
+    image: nginx
     container_name: nginx-proxy
     volumes:
       - ./config/nginx.conf:/etc/nginx/nginx.conf
-      - nginx_static:/opt/jirarush/resources
     ports:
       - "80:80"
     depends_on:
@@ -54,4 +51,3 @@ services:
 volumes:
   pgdata:
   pgdata_test:
-  nginx_static:
