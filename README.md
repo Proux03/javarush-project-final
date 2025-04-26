@@ -57,3 +57,5 @@
     docker build -t jira-rush-image . (собираем образ)
     docker run --network my-network -p 8080:8080 --env-file=.env --name jira-rush jira-rush-image
     (запускаем контейнер в той же сети где запущена БД и подтягиваем файл с переменными окружения)
+10. Написать docker-compose файл для запуска контейнера сервера вместе с БД и nginx. 
+    Для nginx используй конфиг-файл config/nginx.conf. При необходимости файл конфига можно редактировать.
