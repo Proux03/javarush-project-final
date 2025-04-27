@@ -22,6 +22,7 @@ import org.springframework.stereotype.Service;
 import org.thymeleaf.context.Context;
 import org.thymeleaf.spring6.SpringTemplateEngine;
 
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -73,7 +74,7 @@ public class MailService {
         } catch (Exception e) {
             result = e.getMessage();
             log.error("Sending to {} failed: \n{}", toEmail, result);
-            mailCaseRepository.save(new MailCase(toEmail, toName, template, result));
+            mailCaseRepository.save(new MailCase(toEmail, toName, template, result, LocalDateTime.now()));
         }
         return result;
     }

@@ -11,7 +11,6 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 
@@ -41,16 +40,16 @@ public class MailCase extends BaseEntity {
     @Size(min = 2, max = 255)
     private String result;
 
-    @CreationTimestamp
     @Column(name = "date_time", nullable = false, updatable = false)
     @NotNull
     private LocalDateTime dateTime;
 
-    public MailCase(String email, String name, String template, String result) {
+    public MailCase(String email, String name, String template, String result, LocalDateTime dateTime) {
         this.email = email;
         this.name = name;
         this.template = template;
         this.result = result;
+        this.dateTime = dateTime;
     }
 
     @Override
