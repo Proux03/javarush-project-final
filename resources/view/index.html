@@ -4,11 +4,34 @@
 
 <th:block th:replace="~{layout/main::page(title='JiraRush: mini bugtracking system',appMain=~{::appMain})}">
     <appMain>
-        <h1>JiraRush Home page</h1>
+        <!-- Кнопки для переключения языка -->
+        <div style="margin-bottom: 20px; text-align: right;">
+            <button onclick="switchLanguage('ru')">RU</button>
+            <button onclick="switchLanguage('en')">EN</button>
+        </div>
+
+        <h1 id="homeTitle">JiraRush Home page</h1>
         <div th:if="${authUser} != null">
             <form action="/ui/logout" method="post">
-                <button class="btn btn-primary btn-lg mt-3" type="submit">Logout</button>
+                <button class="btn btn-primary btn-lg mt-3" type="submit" id="logoutButton">Logout</button>
             </form>
         </div>
     </appMain>
 </th:block>
+
+<script>
+    function switchLanguage(lang) {
+        const homeTitleElement = document.getElementById("homeTitle");
+        const logoutButtonElement = document.getElementById("logoutButton");
+
+        if (lang === 'ru') {
+            homeTitleElement.textContent = 'Главная страница JiraRush';
+            logoutButtonElement.textContent = 'Выход';
+            document.documentElement.lang = 'ru';
+        } else if (lang === 'en') {
+            homeTitleElement.textContent = 'JiraRush Home page';
+            logoutButtonElement.textContent = 'Logout';
+            document.documentElement.lang = 'en';
+        }
+    }
+</script>
