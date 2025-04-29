@@ -103,3 +103,6 @@ server:
       enabled: true # Enable http encoding support
       force: true
 springdoc.swagger-ui.path: /doc
+
+jwt:
+  secret: MY_SECRET_KEY_FOR_JWT
