@@ -2,6 +2,8 @@ let selectReftype = document.getElementById('select-reftype');
 let modalRef = document.getElementById('modalRef');
 let modalCaller = '';
 
+$.ajaxSetup({headers: {"Authorization": "Bearer " + localStorage.getItem("token")}});
+
 getRefsByType(selectReftype.value);
 selectReftype.addEventListener('change', () => {
     let refType = selectReftype.value;

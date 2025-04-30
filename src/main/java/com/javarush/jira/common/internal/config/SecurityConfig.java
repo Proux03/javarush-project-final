@@ -1,20 +1,25 @@
 package com.javarush.jira.common.internal.config;
 
+import com.javarush.jira.common.jwt.filter.JwtAuthenticationFilter;
 import com.javarush.jira.login.AuthUser;
 import com.javarush.jira.login.Role;
 import com.javarush.jira.login.internal.UserRepository;
+import com.javarush.jira.login.internal.sociallogin.CustomOAuth2UserService;
 import com.javarush.jira.login.internal.sociallogin.CustomTokenResponseConverter;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.converter.FormHttpMessageConverter;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.config.Customizer;
+import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -23,35 +28,26 @@ import org.springframework.security.oauth2.client.endpoint.OAuth2AccessTokenResp
 import org.springframework.security.oauth2.client.endpoint.OAuth2AuthorizationCodeGrantRequest;
 import org.springframework.security.oauth2.client.http.OAuth2ErrorResponseErrorHandler;
 import org.springframework.security.oauth2.core.http.converter.OAuth2AccessTokenResponseHttpMessageConverter;
-import org.springframework.security.oauth2.jwt.JwtDecoder;
-import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
-import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
-import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationProvider;
-import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.beans.factory.annotation.Value;
 
-import javax.crypto.spec.SecretKeySpec;
 import java.util.Arrays;
 
 @Configuration
 @EnableWebSecurity
 @Slf4j
-@Profile("prod")
+@AllArgsConstructor
 //https://stackoverflow.com/questions/72493425/548473
 public class SecurityConfig {
+
     public static final PasswordEncoder PASSWORD_ENCODER = PasswordEncoderFactories.createDelegatingPasswordEncoder();
 
     private final UserRepository userRepository;
+    private final CustomOAuth2UserService customOAuth2UserService;
+    private final RestAuthenticationEntryPoint restAuthenticationEntryPoint;
 
-    private final String secretKey;
 
-    public SecurityConfig(UserRepository userRepository, @Value("${jwt.secret}")String secretKey) {
-        this.userRepository = userRepository;
-        this.secretKey = secretKey;
-    }
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -67,59 +63,67 @@ public class SecurityConfig {
     }
 
     @Bean
-    public AuthenticationManager authenticationManager(HttpSecurity http) throws Exception {
-        return http.getSharedObject(AuthenticationManager.class);
+    public AuthenticationProvider authenticationProvider() {
+        DaoAuthenticationProvider authenticationProvider = new DaoAuthenticationProvider();
+        authenticationProvider.setUserDetailsService(userDetailsService());
+        authenticationProvider.setPasswordEncoder(passwordEncoder());
+        return authenticationProvider;
     }
 
     @Bean
-    public JwtDecoder jwtDecoder() {
-        SecretKeySpec secretKeySpec = new SecretKeySpec(secretKey.getBytes(), "HMACSHA256");
-        return NimbusJwtDecoder.withSecretKey(secretKeySpec).build();
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
+        return authenticationConfiguration.getAuthenticationManager();
     }
 
-    @Bean
-    public JwtAuthenticationProvider jwtAuthenticationProvider(JwtDecoder jwtDecoder) {
-        JwtAuthenticationProvider provider = new JwtAuthenticationProvider(jwtDecoder);
-        provider.setJwtAuthenticationConverter(authenticationConverter());
-        return provider;
-    }
 
     @Bean
-    public JwtAuthenticationTokenFilter jwtAuthenticationTokenFilter(JwtAuthenticationProvider jwtAuthenticationProvider) {
-        return new JwtAuthenticationTokenFilter(jwtAuthenticationProvider);
-    }
-
-    @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthenticationTokenFilter jwtAuthenticationTokenFilter) throws Exception {
-        http
-                .securityMatcher("/**") // Apply to all requests
-                .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers("/api/admin/**").hasRole(Role.ADMIN.name())
-                        .requestMatchers("/api/mngr/**").hasAnyRole(Role.ADMIN.name(), Role.MANAGER.name())
-                        .requestMatchers(HttpMethod.POST, "/api/users").anonymous()
-                        .requestMatchers("/api/**").authenticated()
-                        .requestMatchers("/view/unauth/**", "/ui/register/**", "/ui/password/**").anonymous()
-                        .requestMatchers("/", "/doc", "/v3/api-docs/**", "/swagger-ui.html", "/swagger-ui/**", "/static/**").permitAll()
-                        .requestMatchers("/ui/admin/**", "/view/admin/**").hasRole(Role.ADMIN.name())
-                        .requestMatchers("/ui/mngr/**").hasAnyRole(Role.ADMIN.name(), Role.MANAGER.name())
-                        .anyRequest().authenticated()
-                )
-                .addFilterBefore(jwtAuthenticationTokenFilter, UsernamePasswordAuthenticationFilter.class)
-                .oauth2ResourceServer((oauth2) -> oauth2.jwt(Customizer.withDefaults()))
-                .oauth2Login(oauth2 -> oauth2.loginPage("/view/login"))
-                .logout(logout -> logout.logoutUrl("/ui/logout").logoutSuccessUrl("/"));
+    @Order(1)
+    public SecurityFilterChain apiFilterChain(HttpSecurity http,
+                                              AuthenticationProvider authenticationProvider,
+                                              JwtAuthenticationFilter jwtAuthenticationFilter) throws Exception {
+        http.securityMatcher("/api/**").authorizeHttpRequests()
+                .requestMatchers("/api/admin/**").hasRole(Role.ADMIN.name())
+                .requestMatchers("/api/mngr/**").hasAnyRole(Role.ADMIN.name(), Role.MANAGER.name())
+                .requestMatchers(HttpMethod.POST, "/api/users").anonymous()
+                .requestMatchers( "/api/**").authenticated()
+                .and().httpBasic()
+                .authenticationEntryPoint(restAuthenticationEntryPoint)
+                .and().sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                .and().authenticationProvider(authenticationProvider)
+                .addFilterAfter(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                .csrf().disable();
 
         return http.build();
     }
 
     @Bean
-    public JwtAuthenticationConverter authenticationConverter() {
-        JwtGrantedAuthoritiesConverter authoritiesConverter = new JwtGrantedAuthoritiesConverter();
-        authoritiesConverter.setAuthorityPrefix("");
-        authoritiesConverter.setAuthoritiesClaimName("roles");
-        JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
-        converter.setJwtGrantedAuthoritiesConverter(authoritiesConverter);
-        return converter;
+    @Order(2)
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        http.authorizeHttpRequests()
+                .requestMatchers("/view/unauth/**", "/ui/register/**", "/ui/password/**").anonymous()
+                .requestMatchers("/", "/doc", "/v3/api-docs/**", "/swagger-ui.html", "/swagger-ui/**", "/static/**").permitAll()
+                .requestMatchers("/ui/admin/**", "/view/admin/**").hasRole(Role.ADMIN.name())
+                .requestMatchers("/ui/mngr/**").hasAnyRole(Role.ADMIN.name(), Role.MANAGER.name())
+                .anyRequest().authenticated()
+                .and().formLogin().permitAll()
+                .loginPage("/view/login")
+                .defaultSuccessUrl("/jwt/token", true)
+                .and().oauth2Login()
+                .loginPage("/view/login")
+                .defaultSuccessUrl("/jwt/token", true)
+                .tokenEndpoint()
+                .accessTokenResponseClient(accessTokenResponseClient())
+                .and()
+                .userInfoEndpoint()
+                .userService(customOAuth2UserService)
+                .and().and().logout()
+                .logoutUrl("/ui/logout")
+                .logoutSuccessUrl("/")
+                .invalidateHttpSession(true)
+                .clearAuthentication(true)
+                .deleteCookies("JSESSIONID")
+                .and().csrf().disable();
+        return http.build();
     }
 
     @Bean
@@ -135,4 +139,5 @@ public class SecurityConfig {
         accessTokenResponseClient.setRestOperations(restTemplate);
         return accessTokenResponseClient;
     }
+
 }

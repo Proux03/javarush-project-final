@@ -12,6 +12,8 @@ let menuItemsPopulated;
 let populateContextMenuFunction;
 let onMenuCloseFunction;
 
+$.ajaxSetup({headers: {"Authorization": "Bearer " + localStorage.getItem("token")}});
+
 function setupContextMenu(elementClass, populateFunction, onCloseFunction) {
     populateContextMenuFunction = populateFunction;
     onMenuCloseFunction = onCloseFunction;

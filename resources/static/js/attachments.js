@@ -1,3 +1,4 @@
+$.ajaxSetup({headers: {"Authorization": "Bearer " + localStorage.getItem("token")}});
 function deleteAtt(attId) {
     $.ajax({
         url: '/api/attachments/' + attId,

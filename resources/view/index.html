@@ -16,6 +16,17 @@
                 <button class="btn btn-primary btn-lg mt-3" type="submit" id="logoutButton">Logout</button>
             </form>
         </div>
+        <th:block th:if="${jwt}">
+            <script th:inline="javascript">
+                (function() {
+                    let token = /*[[${jwt}]]*/ null;
+                    if (token) {
+                        localStorage.setItem("token", token);
+                        window.location.href = "/";
+                    }
+                })();
+            </script>
+        </th:block>
     </appMain>
 </th:block>
 

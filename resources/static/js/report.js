@@ -10,6 +10,8 @@ const oneDayMillis = 1000 * 60 * 60 * 24;
 
 $(window).on('load', () => init());
 
+$.ajaxSetup({headers: {"Authorization": "Bearer " + localStorage.getItem("token")}});
+
 function init() {
     setupSelectors();
     $(document).ajaxError((event, jqXHR) => {

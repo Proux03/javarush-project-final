@@ -1,3 +1,5 @@
+$.ajaxSetup({headers: {"Authorization": "Bearer " + localStorage.getItem("token")}});
+
 $(function () {
     setupContextMenu('fancytree-node',
         ((node) => {
