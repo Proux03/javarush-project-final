@@ -45,8 +45,6 @@ public class SecurityConfig {
 
     private final UserRepository userRepository;
     private final CustomOAuth2UserService customOAuth2UserService;
-    private final RestAuthenticationEntryPoint restAuthenticationEntryPoint;
-
 
 
     @Bean
@@ -86,13 +84,10 @@ public class SecurityConfig {
                 .requestMatchers("/api/mngr/**").hasAnyRole(Role.ADMIN.name(), Role.MANAGER.name())
                 .requestMatchers(HttpMethod.POST, "/api/users").anonymous()
                 .requestMatchers( "/api/**").authenticated()
-                .and().httpBasic()
-                .authenticationEntryPoint(restAuthenticationEntryPoint)
                 .and().sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 .and().authenticationProvider(authenticationProvider)
                 .addFilterAfter(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .csrf().disable();
-
         return http.build();
     }
 
