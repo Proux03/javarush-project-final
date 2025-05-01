@@ -1,5 +1,7 @@
 const codeTitleMap = new Map();
 
+$.ajaxSetup({headers: {"Authorization": "Bearer " + localStorage.getItem("token")}});
+
 function changeInputContactCodeToTitleAndReturnCode(row) {
     let typeCode = row.cells[0].children[0].value;
     const typeTitle = codeTitleMap.get(typeCode);

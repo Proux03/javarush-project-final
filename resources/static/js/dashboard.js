@@ -11,6 +11,8 @@ const doneTaskColumn = $('#done-task-column');
 const tasksByColumns = new Map();
 const oneDayMillis = 1000 * 60 * 60 * 24;
 
+$.ajaxSetup({headers: {"Authorization": "Bearer " + localStorage.getItem("token")}});
+
 $(window).on('load', () => init());
 
 function init() {

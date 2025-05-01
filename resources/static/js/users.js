@@ -1,5 +1,7 @@
 const userUrl = "/api/admin/users";
 
+$.ajaxSetup({headers: {"Authorization": "Bearer " + localStorage.getItem("token")}});
+
 // https://stackoverflow.com/a/5064235/548473
 const ctx = {
     ajaxUrl: userUrl,

@@ -103,3 +103,7 @@ server:
       enabled: true # Enable http encoding support
       force: true
 springdoc.swagger-ui.path: /doc
+
+jwt:
+  secret: "2d4d373c637c222e6d36454e552954544c29376c50554b3a3c47275c4f5a4379"
+  expiration-time: 86400000

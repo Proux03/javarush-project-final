@@ -23,7 +23,7 @@ function makeEditable(datatableOpts) {
     });
 
     // solve problem with cache in IE: https://stackoverflow.com/a/4303862/548473
-    $.ajaxSetup({cache: false});
+    $.ajaxSetup({cache: false, headers: {"Authorization": "Bearer " + localStorage.getItem("token")}});
 }
 
 function add() {
