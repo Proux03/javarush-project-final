@@ -10,6 +10,7 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.converter.FormHttpMessageConverter;
@@ -36,6 +37,7 @@ import java.util.Arrays;
 
 @Configuration
 @EnableWebSecurity
+@Profile("prod")
 @Slf4j
 @AllArgsConstructor
 //https://stackoverflow.com/questions/72493425/548473
